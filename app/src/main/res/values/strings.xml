@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">Double decker</string>
 
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="service_not_available">service_not_available</string>
+    <string name="no_permission_granted">no_permission_granted</string>
+    <string name="location_updated_message">location_updated_message</string>
+    <string name="invalid_lat_long_used">invalid_lat_long_used</string>
+    <string name="no_address_found">no_address_found</string>
+    <string name="address_found">address_found</string>
+    <string name="no_geocoder_available">no_geocoder_available</string>
+    <string name="no_location_data_provided">no_location_data_provided</string>
+
 </resources>
