@@ -11,7 +11,13 @@ import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,23 +28,34 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.octo.android.robospice.persistence.DurationInMillis;
+import com.octo.android.robospice.persistence.exception.SpiceException;
+import com.octo.android.robospice.request.listener.RequestListener;
+
+import java.util.Collections;
+import java.util.List;
 
 import uk.co.andrespedraza.android.doubledecker.R;
+import uk.co.andrespedraza.android.doubledecker.network.domain.StopPoint;
+import uk.co.andrespedraza.android.doubledecker.network.domain.StopPointsResponse;
+import uk.co.andrespedraza.android.doubledecker.network.request.ListBusStopsRequest;
 import uk.co.andrespedraza.android.doubledecker.service.FetchAddressIntentService;
 import uk.co.andrespedraza.android.doubledecker.util.Constants;
+import uk.co.andrespedraza.android.doubledecker.util.StopPointDistanceComparator;
+import uk.co.andrespedraza.android.doubledecker.util.TfLUtils;
 
 public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
 
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 30000;
+    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60 * 1000; // 1 minute
     /**
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
      */
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
-            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+            UPDATE_INTERVAL_IN_MILLISECONDS;
     protected static final String TAG = "NearbyActivity";
     protected static final String ADDRESS_REQUESTED_KEY = "address-request-pending";
     protected static final String LOCATION_ADDRESS_KEY = "location-address";
@@ -62,6 +79,9 @@ public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCa
      * Represents a geographical location.
      */
     protected Location mCurrentLocation;
+
+    protected RecyclerView mBusStopsRecyclerView;
+    protected BusStopsAdapter mBusStopsAdapter;
 
     /**
      * Tracks whether the user has requested an address. Becomes true when the user requests an
@@ -99,6 +119,9 @@ public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCa
         mResultReceiver = new AddressResultReceiver(new Handler());
 
         mNearbyTitle = (TextView) findViewById(R.id.nearby_location);
+        mBusStopsRecyclerView = (RecyclerView) findViewById(R.id.stop_points_recycler_view);
+        mBusStopsRecyclerView.setHasFixedSize(true);
+        mBusStopsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
@@ -256,9 +279,14 @@ public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCa
      * GoogleApiClient is connected.
      */
     public void fetchAddressHandler() {
+
+        if (null == mGoogleApiClient) {
+            buildGoogleApiClient();
+        }
         // We only start the service to fetch the address if GoogleApiClient is connected.
         if (mGoogleApiClient.isConnected() && mCurrentLocation != null) {
             startIntentService();
+            fetchBusStopsNearby();
         }
         // If GoogleApiClient isn't connected, we process the user's request by setting
         // mAddressRequested to true. Later, when GoogleApiClient connects, we launch the service to
@@ -442,13 +470,6 @@ public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCa
         }
     }
 
-    /**
-     * Shows a toast with the given text.
-     */
-    protected void showToast(String text) {
-        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
-    }
-
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         // Save whether the address has been requested.
@@ -461,6 +482,50 @@ public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCa
         savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
 
         super.onSaveInstanceState(savedInstanceState);
+    }
+
+    private void fetchBusStopsNearby() {
+        getSpiceManager().execute(
+                new ListBusStopsRequest(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()),
+                ListBusStopsRequest.CACHE_KEY,
+                DurationInMillis.ALWAYS_EXPIRED,
+                new RequestListener<StopPointsResponse>() {
+                    @Override
+                    public void onRequestFailure(SpiceException spiceException) {
+                        showToast("Request failed!");
+                    }
+
+                    @Override
+                    public void onRequestSuccess(StopPointsResponse stopPointsResponse) {
+                        if (null != stopPointsResponse && null != stopPointsResponse.getStopPoints() && !stopPointsResponse.getStopPoints().isEmpty()) {
+
+                            // Remove stop points without lines.
+                            stopPointsResponse.setStopPoints(TfLUtils.removeStopPointsWithoutLines(stopPointsResponse.getStopPoints()));
+
+                            // Set custom order.
+                            Collections.sort(stopPointsResponse.getStopPoints(), new StopPointDistanceComparator(mCurrentLocation));
+
+                            if (null == mBusStopsAdapter) {
+
+                                mBusStopsAdapter = new BusStopsAdapter(stopPointsResponse);
+                                mBusStopsRecyclerView.setAdapter(mBusStopsAdapter);
+
+                            } else {
+
+                                mBusStopsAdapter.mStopPoints = stopPointsResponse.getStopPoints();
+
+                            }
+
+                            mBusStopsAdapter.notifyDataSetChanged();
+
+                            showToast("Fetch result with " + stopPointsResponse.getStopPoints().size() + " bus stops.");
+                        } else {
+                            showToast("Request succeed!");
+                        }
+
+                    }
+                }
+        );
     }
 
     /**
@@ -490,6 +555,67 @@ public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCa
             mAddressRequested = false;
             updateUIWidgets();
         }
+    }
+
+    public class BusStopsHolder extends RecyclerView.ViewHolder {
+
+        private StopPoint mStopPoint;
+
+        private TextView mStopPointNameTextView;
+        private TextView mStopPointLetterTextView;
+        private TextView mStopPointLinesTextView;
+        private TextView mStopPointDistanceTextView;
+
+        public BusStopsHolder(View itemView) {
+            super(itemView);
+
+            mStopPointNameTextView = (TextView) itemView.findViewById(R.id.stop_point_name);
+            mStopPointLetterTextView = (TextView) itemView.findViewById(R.id.stop_point_letter);
+            mStopPointLinesTextView = (TextView) itemView.findViewById(R.id.stop_point_lines);
+            mStopPointDistanceTextView = (TextView) itemView.findViewById(R.id.stop_point_distance);
+
+            itemView.setOnClickListener((View v) -> {
+                Intent intent = new Intent(NearbyActivity.this, BusStopActivity.class);
+                intent.putExtra(BusStopActivity.INTENT_EXTRA_BUS_POINT, mStopPoint);
+                startActivity(intent);
+            });
+        }
+
+        public void bindBusStop(StopPoint stopPoint) {
+            mStopPoint = stopPoint;
+            mStopPointNameTextView.setText(mStopPoint.getCommonName());
+            mStopPointLetterTextView.setText(mStopPoint.getStopLetter());
+            mStopPointLinesTextView.setText(mStopPoint.generateLinesList());
+            mStopPointDistanceTextView.setText(mStopPoint.getRoundedCalculatedDistance());
+        }
+
+    }
+
+    private class BusStopsAdapter extends RecyclerView.Adapter<BusStopsHolder> {
+
+        private List<StopPoint> mStopPoints;
+
+        public BusStopsAdapter(StopPointsResponse stopPointsResponse) {
+            this.mStopPoints = stopPointsResponse.getStopPoints();
+        }
+
+        @Override
+        public BusStopsHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater mLayoutInflater = LayoutInflater.from(NearbyActivity.this);
+            View mView = mLayoutInflater.inflate(R.layout.list_item_stop_point, parent, false);
+            return new BusStopsHolder(mView);
+        }
+
+        @Override
+        public void onBindViewHolder(BusStopsHolder holder, int position) {
+            holder.bindBusStop(this.mStopPoints.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return this.mStopPoints.size();
+        }
+
     }
 
 }

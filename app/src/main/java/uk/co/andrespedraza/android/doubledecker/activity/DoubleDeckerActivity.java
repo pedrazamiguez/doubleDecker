@@ -5,15 +5,20 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
+
+import com.octo.android.robospice.SpiceManager;
 
 import uk.co.andrespedraza.android.doubledecker.R;
+import uk.co.andrespedraza.android.doubledecker.network.service.TfLService;
 
 public class DoubleDeckerActivity extends AppCompatActivity {
+
+    private SpiceManager mSpiceManager = new SpiceManager(TfLService.class);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Window window = getWindow();
 
         // clear FLAG_TRANSLUCENT_STATUS flag:
@@ -24,6 +29,28 @@ public class DoubleDeckerActivity extends AppCompatActivity {
 
         // finally change the color
         window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+    }
 
+    @Override
+    protected void onStart() {
+        mSpiceManager.start(this);
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        mSpiceManager.shouldStop();
+        super.onStop();
+    }
+
+    public SpiceManager getSpiceManager() {
+        return mSpiceManager;
+    }
+
+    /**
+     * Shows a toast with the given text.
+     */
+    protected void showToast(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 }
