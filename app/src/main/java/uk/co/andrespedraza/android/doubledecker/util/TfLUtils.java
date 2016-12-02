@@ -65,4 +65,41 @@ public class TfLUtils {
         return lstFinalStopPoints;
     }
 
+    public static String calculateTimeInMinutes(Date from, Date to) {
+
+        String result;
+
+        if (null != from && null != to) {
+            long minutes = Math.abs(from.getTime() - to.getTime()) / (60 * 1000);
+
+            if (0 == minutes) {
+                result = "due";
+            } else if (1 == minutes) {
+                result = "1 min";
+            } else {
+                result = String.format("%s mins", minutes);
+            }
+
+        } else {
+            result = "Prediction not available";
+        }
+
+        return result;
+    }
+
+    public static double calculateTimeValue(Date from, Date to) {
+
+        double result = 99d;
+
+        if (null != from && null != to) {
+            result = Math.abs(from.getTime() - to.getTime()) / (60d * 1000);
+        }
+
+        if (0d == result) {
+            int i;
+        }
+
+        return result;
+    }
+
 }
