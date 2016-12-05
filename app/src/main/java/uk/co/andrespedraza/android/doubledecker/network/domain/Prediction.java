@@ -6,7 +6,9 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class Prediction {
+import uk.co.andrespedraza.android.doubledecker.util.TfLUtils;
+
+public class Prediction implements Comparable<Prediction> {
 
     @SerializedName("$type")
     @Expose
@@ -71,6 +73,8 @@ public class Prediction {
     @SerializedName("timing")
     @Expose
     private PredictionTiming timing;
+
+    private double minValue;
 
     /**
      * @return The $type
@@ -366,8 +370,59 @@ public class Prediction {
         this.timing = timing;
     }
 
+    private void calculateExpectedTime() {
+        if (null != timestamp && null != expectedArrival) {
+            minValue = TfLUtils.calculateTimeValue(timestamp, expectedArrival);
+        }
+    }
+
+    public static void calculateExpectedTimes(Prediction.List list) {
+        if (null != list) {
+            for (Prediction p : list) {
+                p.calculateExpectedTime();
+            }
+        }
+    }
+
+    @Override
+    public int compareTo(Prediction o) {
+
+        int result = 0;
+
+        if (null != timestamp && null != expectedArrival && null != o && null != o.getTimestamp() && null != o.getExpectedArrival()) {
+            int oMinValue1 = (int) Math.round(100 * minValue);
+            int oMinValue2 = (int) Math.round(100 * o.getMinValue());
+            result = oMinValue1 - oMinValue2;
+            if (0 == result) {
+                result = lineName.compareToIgnoreCase(o.getLineName());
+            }
+        }
+
+        return result;
+    }
+
+    public String getMinValueString() {
+        String result;
+        if (99d <= minValue) {
+            result = "Prediction not available";
+        } else {
+            int minutes = (int) Math.round(minValue);
+            if (0 == minutes) {
+                result = "due";
+            } else if (1 == minutes) {
+                result = "1 min";
+            } else {
+                result = String.format("%s min", minutes);
+            }
+        }
+        return result;
+    }
+
+    public double getMinValue() {
+        return minValue;
+    }
+
     public static class List extends ArrayList<Prediction> {
 
     }
-
 }
