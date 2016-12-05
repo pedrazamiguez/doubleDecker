@@ -80,6 +80,7 @@ public class BusStopActivity extends DoubleDeckerActivity {
 
                         if (null != predictions && !predictions.isEmpty()) {
 
+                            Prediction.calculateExpectedTimes(predictions);
                             Collections.sort(predictions);
 
                             if (null == mPredictionAdapter) {

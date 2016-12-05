@@ -370,15 +370,28 @@ public class Prediction implements Comparable<Prediction> {
         this.timing = timing;
     }
 
+    private void calculateExpectedTime() {
+        if (null != timestamp && null != expectedArrival) {
+            minValue = TfLUtils.calculateTimeValue(timestamp, expectedArrival);
+        }
+    }
+
+    public static void calculateExpectedTimes(Prediction.List list) {
+        if (null != list) {
+            for (Prediction p : list) {
+                p.calculateExpectedTime();
+            }
+        }
+    }
+
     @Override
     public int compareTo(Prediction o) {
 
         int result = 0;
 
         if (null != timestamp && null != expectedArrival && null != o && null != o.getTimestamp() && null != o.getExpectedArrival()) {
-            minValue = TfLUtils.calculateTimeValue(timestamp, expectedArrival);
             int oMinValue1 = (int) Math.round(100 * minValue);
-            int oMinValue2 = (int) Math.round(100 * TfLUtils.calculateTimeValue(o.getTimestamp(), o.getExpectedArrival()));
+            int oMinValue2 = (int) Math.round(100 * o.getMinValue());
             result = oMinValue1 - oMinValue2;
             if (0 == result) {
                 result = lineName.compareToIgnoreCase(o.getLineName());
