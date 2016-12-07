@@ -10,5 +10,6 @@
     <string name="no_location_data_provided">no_location_data_provided</string>
     <string name="network_error">There was a connection error</string>
     <string name="no_predictions_to_show">There are no predictions at the moment</string>
+    <string name="no_routes_to_show">There are no routes for the given line at the moment</string>
 
 </resources>

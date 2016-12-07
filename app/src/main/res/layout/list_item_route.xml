@@ -51,12 +51,4 @@
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/stop_point_distance"
-        android:layout_width="45dp"
-        android:layout_height="match_parent"
-        android:gravity="center_vertical|end"
-        android:textColor="@color/colorAccent"
-        android:textSize="14sp" />
-
 </LinearLayout>
