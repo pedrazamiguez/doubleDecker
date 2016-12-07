@@ -44,6 +44,9 @@ public class StopPoint implements Parcelable {
     @SerializedName("commonName")
     @Expose
     private String commonName;
+    @SerializedName("name")
+    @Expose
+    private String name;
     @SerializedName("distance")
     @Expose
     private Double distance;
@@ -256,6 +259,14 @@ public class StopPoint implements Parcelable {
      */
     public void setLon(Double lon) {
         this.lon = lon;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<Identifier> getLines() {

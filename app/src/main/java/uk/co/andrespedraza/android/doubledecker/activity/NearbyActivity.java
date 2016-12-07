@@ -77,6 +77,7 @@ public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCa
         mResultReceiver = new AddressResultReceiver(new Handler());
 
         mNearbyTitle = (TextView) findViewById(R.id.nearby_location);
+        mNearbyTitle.setSelected(true);
         mBusStopsRecyclerView = (RecyclerView) findViewById(R.id.stop_points_recycler_view);
         mBusStopsRecyclerView.setHasFixedSize(true);
         mBusStopsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -260,6 +261,9 @@ public class NearbyActivity extends DoubleDeckerActivity implements ConnectionCa
     }
 
     protected void displayAddressOutput() {
+        if (null != mAddressOutput) {
+            mAddressOutput = mAddressOutput.replace("\n", " ").trim();
+        }
         mNearbyTitle.setText(mAddressOutput);
     }
 

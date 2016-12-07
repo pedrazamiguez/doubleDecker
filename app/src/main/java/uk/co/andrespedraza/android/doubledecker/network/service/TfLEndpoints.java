@@ -4,6 +4,7 @@ import retrofit.http.GET;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import uk.co.andrespedraza.android.doubledecker.network.domain.Prediction;
+import uk.co.andrespedraza.android.doubledecker.network.domain.RouteSequence;
 import uk.co.andrespedraza.android.doubledecker.network.domain.StopPointsResponse;
 
 public interface TfLEndpoints {
@@ -37,5 +38,19 @@ public interface TfLEndpoints {
                                     @Query("useStopPointHierarchy") String useStopPointHierarchy,
                                     @Query("modes") String modes,
                                     @Query("returnLines") String returnLines);
+
+    /**
+     * Gets all valid routes for given line id, including the sequence of stops on each route.
+     *
+     * @param lineName A single line id e.g. victoria (you can use the /Line/ endpoint to retrieve all lines and their ids)
+     * @param direction The direction of travel. Can be inbound or outbound.
+     * @param serviceTypes Optional. A comma seperated list of service types to filter on. If not specified. Supported values: Regular, Night. Defaulted to 'Regular' if not specified
+     * @param excludeCrowding Optional. That excludes crowding from line disruptions. Can be true or false.
+     */
+    @GET("/Line/{lineName}/Route/Sequence/{direction}")
+    RouteSequence findLineRoute(@Path("lineName") String lineName,
+                                @Path("direction") String direction,
+                                @Query("serviceTypes") String serviceTypes,
+                                @Query("excludeCrowding") String excludeCrowding);
 
 }

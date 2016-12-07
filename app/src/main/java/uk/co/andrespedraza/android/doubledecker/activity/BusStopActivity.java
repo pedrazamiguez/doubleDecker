@@ -115,7 +115,11 @@ public class BusStopActivity extends DoubleDeckerActivity {
             mPredictionLineNameTextView = (TextView) itemView.findViewById(R.id.prediction_line_name);
             mPredictionTimeTextView = (TextView) itemView.findViewById(R.id.prediction_time);
 
-            // TODO add on click listener to show all stops for this line
+            itemView.setOnClickListener((View v) -> {
+                Intent intent = BusRouteActivity.newInstance(BusStopActivity.this, mPrediction.getLineName(), mPrediction.getDestinationName(), mPrediction.getTowards(), mPrediction.getNaptanId());
+                startActivity(intent);
+            });
+
         }
 
         public void bindPrediction(Prediction prediction) {

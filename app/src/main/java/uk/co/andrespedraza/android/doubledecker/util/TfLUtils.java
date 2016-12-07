@@ -17,6 +17,11 @@ public class TfLUtils {
     public static final String TFL_BUS_STOP_USE_HIERARCHY = "False";
     public static final String TFL_BUS_STOP_MODE = "bus";
     public static final String TFL_BUS_STOP_RETURN_LINES = "True";
+
+    public static final String TFL_ROUTE_SEQUENCE_SERVICE_TYPES = "regular,night";
+    public static final String TFL_ROUTE_SEQUENCE_EXCLUDE_CROWDING = "True";
+
+
     private static final String TFL_DATE_FORMAT_01 = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     private static final String TFL_DATE_FORMAT_02 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     private static final String TFL_DATE_FORMAT_03 = "yyyy-MM-dd'T'HH:mm:ss";

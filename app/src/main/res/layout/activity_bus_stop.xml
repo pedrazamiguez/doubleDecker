@@ -40,6 +40,8 @@
                 android:paddingEnd="@dimen/activity_horizontal_margin"
                 android:paddingStart="@dimen/activity_horizontal_margin"
                 android:textColor="@color/colorPrimaryDark"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:textSize="16sp" />
 
             <TextView
@@ -50,6 +52,8 @@
                 android:paddingStart="@dimen/activity_horizontal_margin"
                 android:textColor="@android:color/black"
                 android:text="towards London Bridge via Bank"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:textSize="14sp" />
 
         </LinearLayout>

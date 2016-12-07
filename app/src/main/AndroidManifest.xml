@@ -36,7 +36,12 @@
         </activity>
         <activity
             android:name=".activity.BusRouteActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:parentActivityName=".activity.BusStopActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.BusStopActivity" />
+        </activity>
 
         <service
             android:name=".service.FetchAddressIntentService"
